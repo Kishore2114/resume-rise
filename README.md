@@ -10,11 +10,30 @@ Double-click `index.html` (or `start.bat`). Any modern browser works.
 
 ## Connect an LLM
 
-Click **⚙ LLM settings** and pick a provider (OpenAI, Groq, OpenRouter, Ollama, or any OpenAI-compatible URL), a model, and your API key.
+For the recommended secure setup, set an OpenAI API key in the server environment and start `serve.py`:
+
+```powershell
+$env:OPENAI_API_KEY="your-key-here"
+python serve.py
+```
+
+Leave **Local server (secure OpenAI proxy)** selected in **LLM settings**. The key stays on the server and is never stored in the browser. You can optionally set `OPENAI_MODEL` to change the default model (default: `gpt-4o-mini`).
+
+Direct browser providers remain available: OpenAI, Groq, OpenRouter, Ollama, or any OpenAI-compatible URL. API keys may be kept in `sessionStorage` or `localStorage` for direct-provider mode.
 
 - Keyword baseline works fully offline, with no key.
 - Fully local/private option: install [Ollama](https://ollama.com), `ollama pull llama3.1`, then start it with `OLLAMA_ORIGINS=*` (PowerShell: `$env:OLLAMA_ORIGINS="*"; ollama serve`) and choose the *Ollama* preset.
 - API keys are kept in `sessionStorage` (cleared when the tab closes) unless you tick "Remember". Resumes are never stored.
+
+The recommended no-key setup uses Ollama locally:
+
+```powershell
+ollama pull llama3.2:3b
+ollama serve
+python serve.py
+```
+
+Leave **Local server (free Ollama, no API key)** selected in **LLM settings**. The model and all resume text stay on this PC. Direct browser providers remain available for optional hosted use.
 
 ## Features (matching the paper)
 

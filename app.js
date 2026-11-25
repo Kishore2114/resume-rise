@@ -28,6 +28,7 @@
 
   // ---------- settings ----------
   const PRESETS = {
+    server:     { base: "", model: "llama3.2:3b" },
     openai:     { base: "https://api.openai.com/v1",        model: "gpt-4o-mini" },
     groq:       { base: "https://api.groq.com/openai/v1",   model: "llama-3.3-70b-versatile" },
     openrouter: { base: "https://openrouter.ai/api/v1",     model: "openai/gpt-4o-mini" },
@@ -38,12 +39,17 @@
   const KKEY = "resumerise.apikey";
 
   function loadSettings() {
-    let s = { preset: "openai", ...PRESETS.openai, temp: 0.2, remember: false, key: "" };
+    let s = { preset: "server", ...PRESETS.server, temp: 0.2, remember: false, key: "" };
     try { Object.assign(s, JSON.parse(localStorage.getItem(SKEY) || "{}")); } catch (_) {}
     const remembered = localStorage.getItem(KKEY);
     const session = sessionStorage.getItem(KKEY);
     s.key = remembered || session || "";
     s.remember = !!remembered;
+    if (!s.key && s.preset !== "ollama") {
+      s.preset = "server";
+      s.base = "";
+      s.model = PRESETS.server.model;
+    }
     return s;
   }
   let settings = loadSettings();
@@ -80,16 +86,18 @@
 
   // ---------- LLM client ----------
   async function llm(system, user, { signal } = {}) {
-    if (!settings.base || !settings.model) throw new Error("Open “LLM settings” and set a base URL and model first.");
-    if (settings.preset !== "ollama" && !settings.key && !/localhost|127\.0\.0\.1/.test(settings.base))
+    if (settings.preset !== "server" && (!settings.base || !settings.model)) throw new Error("Open “LLM settings” and set a base URL and model first.");
+    if (settings.preset !== "server" && settings.preset !== "ollama" && !settings.key && !/localhost|127\.0\.0\.1/.test(settings.base))
       throw new Error("No API key set. Open “LLM settings” to add one (or use Ollama for local, keyless use).");
+
+    const endpoint = settings.preset === "server" ? "/api/chat/completions" : settings.base + "/chat/completions";
 
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 120000);
     if (signal) signal.addEventListener("abort", () => ctrl.abort());
     let res;
     try {
-      res = await fetch(settings.base + "/chat/completions", {
+      res = await fetch(endpoint, {
         method: "POST",
         signal: ctrl.signal,
         headers: {
@@ -478,7 +486,9 @@ Requirements: SQL, Python, data visualisation, statistics, Excel, good communica
       finally { settings = prev; }
     });
 
-    if (!settings.key && settings.preset !== "ollama") {
+    if (settings.preset === "server" || settings.preset === "ollama") {
+      $("match-status").textContent = "Using free local Ollama. No API key required.";
+    } else if (!settings.key) {
       $("match-status").textContent = "Tip: keyword baseline works offline; add an LLM in ⚙ settings for the full analysis.";
     }
   }
