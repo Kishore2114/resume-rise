@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResumeRise – Truthful Resume &amp; Interview Coach</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">R</span>
+      <div>
+        <h1>ResumeRise</h1>
+        <p class="tag">A truthfulness-constrained coach for resume–job matching and interview practice</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="btn-settings" class="btn ghost" type="button">⚙ LLM settings</button>
+      <button id="btn-theme" class="btn ghost" type="button" aria-label="Toggle theme">◐ Theme</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="notice">
+      <strong>Candidate-side coach.</strong> Advice only, not hiring decisions. Remove contact details before pasting.
+      Nothing is stored by this app; text is sent only to the LLM endpoint you configure.
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" role="tab" data-tab="match" aria-selected="true">1 · Resume Match</button>
+      <button class="tab" role="tab" data-tab="interview" aria-selected="false">2 · Mock Interview</button>
+      <button class="tab" role="tab" data-tab="about" aria-selected="false">About</button>
+    </nav>
+
+    <!-- Shared inputs -->
+    <section id="inputs" class="card">
+      <div class="grid2">
+        <div>
+          <label for="resume">Resume text</label>
+          <textarea id="resume" rows="14" placeholder="Paste your resume text here (without name, email, phone)…"></textarea>
+        </div>
+        <div>
+          <label for="job">Job description</label>
+          <textarea id="job" rows="14" placeholder="Paste the job description here…"></textarea>
+        </div>
+      </div>
+      <div class="row">
+        <button id="btn-redact" class="btn ghost" type="button">Remove emails / phones / links</button>
+        <button id="btn-sample" class="btn ghost" type="button">Load sample</button>
+        <button id="btn-clear" class="btn ghost" type="button">Clear</button>
+        <span id="redact-msg" class="muted"></span>
+      </div>
+    </section>
+
+    <section id="tab-match" class="tabpanel">
+      <div class="row">
+        <button id="btn-analyze" class="btn primary" type="button">Analyze match</button>
+        <button id="btn-baseline" class="btn" type="button">Keyword baseline only (offline)</button>
+        <span id="match-status" class="muted" role="status"></span>
+      </div>
+      <div id="match-out"></div>
+    </section>
+
+    <section id="tab-interview" class="tabpanel" hidden>
+      <div class="row">
+        <button id="btn-start-interview" class="btn primary" type="button">Generate 5 questions</button>
+        <span id="int-status" class="muted" role="status"></span>
+      </div>
+      <div id="interview-out"></div>
+    </section>
+
+    <section id="tab-about" class="tabpanel" hidden>
+      <div class="card prose">
+        <h2>How it works</h2>
+        <ul>
+          <li><b>Keyword baseline</b> – the top 20 non-stop-word terms of the job description by frequency; coverage is the share found in your resume. Runs fully offline.</li>
+          <li><b>LLM analysis</b> – structured JSON: score (skills 40, experience 30, education 15, communication evidence 15), strengths, must-have / nice-to-have gaps with honest actions, three bullet rewrites and clarity flags.</li>
+          <li><b>Truthfulness</b> – the model must use only facts in your resume. Each rewrite quotes the original line, and the app checks that the quote exists in your resume and flags numbers that do not.</li>
+          <li><b>Mock interview</b> – 5 questions (2 behavioural, 2 technical, 1 project). Each answer is scored 1–5 on relevance, structure, specificity and communication; a session average is shown. Length is not rewarded.</li>
+          <li><b>Robustness</b> – resume, job and answers are treated as data; embedded instructions are ignored. All model output is rendered as plain text.</li>
+        </ul>
+        <p class="muted">Scores estimate similarity to a posting, not hiring outcomes. Verify every statement on your resume.</p>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="dlg-settings">
+    <form method="dialog" id="settings-form">
+      <h2>LLM settings</h2>
+      <p class="muted">Any OpenAI-compatible <code>/chat/completions</code> endpoint works. Pick a preset or use a custom URL.
+        For fully local use, run <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a>.</p>
+
+      <label for="set-preset">Provider preset</label>
+      <select id="set-preset">
+        <option value="openai">OpenAI</option>
+        <option value="groq">Groq</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="ollama">Ollama (local, no key)</option>
+        <option value="custom">Custom</option>
+      </select>
+
+      <label for="set-base">Base URL</label>
+      <input id="set-base" type="url" placeholder="https://api.openai.com/v1">
+
+      <label for="set-model">Model</label>
+      <input id="set-model" type="text" placeholder="gpt-4o-mini">
+
+      <label for="set-key">API key</label>
+      <input id="set-key" type="password" autocomplete="off" placeholder="sk-… (leave blank for Ollama)">
+
+      <label class="inline"><input id="set-remember" type="checkbox"> Remember key on this device (localStorage)</label>
+
+      <label for="set-temp">Temperature: <span id="set-temp-val">0.2</span></label>
+      <input id="set-temp" type="range" min="0" max="1" step="0.1" value="0.2">
+
+      <div class="row end">
+        <button id="btn-test" class="btn ghost" type="button">Test connection</button>
+        <button id="btn-save" class="btn primary" value="default">Save</button>
+        <button class="btn" value="cancel">Close</button>
+      </div>
+      <p id="set-msg" class="muted" role="status"></p>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
